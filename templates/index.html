@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAG workflow</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>RAG with your knowledge base</h1>
+
+        <form id="upload-form">
+            <label>Upload a Document (TXT, PDF, DOCX):</label>
+            <input type="file" id="file-input" name="file" required />
+            <button type="submit">Upload</button>
+        </form>
+
+        <div id="upload-status"></div>
+
+        <form id="qa-form" style="display: none;">
+            <label>Ask a Question:</label>
+            <input type="text" id="question-input" name="question" placeholder="What is this document about?" required />
+            <button type="submit">Get Answer</button>
+        </form>
+
+        <div id="answer-box"></div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById("upload-form");
+        const qaForm = document.getElementById("qa-form");
+
+        uploadForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+            const response = await fetch("/upload", { method: "POST", body: formData });
+            const result = await response.json();
+
+            const statusDiv = document.getElementById("upload-status");
+            if (result.message) {
+                statusDiv.innerHTML = `${result.message}`;
+                qaForm.style.display = "block";
+            } else {
+                statusDiv.innerHTML = `${result.error}`;
+            }
+        });
+
+        qaForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const question = document.getElementById("question-input").value;
+            const formData = new FormData();
+            formData.append("question", question);
+
+            const response = await fetch("/ask", { method: "POST", body: formData });
+            const result = await response.json();
+
+            document.getElementById("answer-box").innerHTML = result.answer ? `<strong>Answer:</strong> ${result.answer}` : `${result.error}`;
+        });
+    </script>
+</body>
+</html>
